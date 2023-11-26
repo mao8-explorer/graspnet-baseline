@@ -1,7 +1,7 @@
 # graspnet 实践
 add ReacherGrasp_Server.py 与 STORM配合使用 \
-优化抓取角度: \
-* models/graspnet： clip approaching that dangerous to execute for eye_in_pandaHand \
+优化抓取角度: 
+* models/graspnet： clip approaching that dangerous to execute for eye_in_pandaHand 
 * 使用四元数余弦相似度理论解决夹爪翻转选取的问题 
 
 # GraspNet Baseline
