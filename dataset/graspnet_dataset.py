@@ -9,14 +9,15 @@ import scipy.io as scio
 from PIL import Image
 
 import torch
-from torch._six import container_abcs
+import collections.abc as container_abcs
+int_classes = int
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.dirname(BASE_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
-from data_utils import CameraInfo, transform_point_cloud, create_point_cloud_from_depth_image,\
+from utils.data_utils import CameraInfo, transform_point_cloud, create_point_cloud_from_depth_image,\
                             get_workspace_mask, remove_invisible_grasp_points
 
 class GraspNetDataset(Dataset):
@@ -283,7 +284,7 @@ if __name__ == "__main__":
     print(cloud.shape)
     print(cloud.dtype)
     print(cloud[:,0].min(), cloud[:,0].max())
-    print(cloud[:,1].min(), cloud[:,1].max())
+    print(cloud[:,1].min(), cloud[:,1].max())   
     print(cloud[:,2].min(), cloud[:,2].max())
     print(seg.shape)
     print((seg>0).sum())

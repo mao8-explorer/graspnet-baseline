@@ -1,4 +1,11 @@
+# graspnet 实践
+add ReacherGrasp_Server.py 与 STORM配合使用 \
+优化抓取角度: \
+* models/graspnet： clip approaching that dangerous to execute for eye_in_pandaHand \
+* 使用四元数余弦相似度理论解决夹爪翻转选取的问题 
+
 # GraspNet Baseline
+
 Baseline model for "GraspNet-1Billion: A Large-Scale Benchmark for General Object Grasping" (CVPR 2020).
 
 [[paper](https://openaccess.thecvf.com/content_CVPR_2020/papers/Fang_GraspNet-1Billion_A_Large-Scale_Benchmark_for_General_Object_Grasping_CVPR_2020_paper.pdf)]

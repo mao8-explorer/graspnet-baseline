@@ -18,8 +18,8 @@ sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 from backbone import Pointnet2Backbone
 from modules import ApproachNet, CloudCrop, OperationNet, ToleranceNet
 from loss import get_loss
-from loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE
-from label_generation import process_grasp_labels, match_grasp_view_and_label, batch_viewpoint_params_to_matrix
+from utils.loss_utils import GRASP_MAX_WIDTH, GRASP_MAX_TOLERANCE
+from utils.label_generation import process_grasp_labels, match_grasp_view_and_label, batch_viewpoint_params_to_matrix
 
 
 class GraspNetStage1(nn.Module):
@@ -82,7 +82,7 @@ def pred_decode(end_points):
         objectness_score = end_points['objectness_score'][i].float()
         grasp_score = end_points['grasp_score_pred'][i].float()
         grasp_center = end_points['fp2_xyz'][i].float()
-        approaching = -end_points['grasp_top_view_xyz'][i].float()
+        approaching = -end_points['grasp_top_view_xyz'][i].float() # 方向向量
         grasp_angle_class_score = end_points['grasp_angle_cls_pred'][i]
         grasp_width = 1.2 * end_points['grasp_width_pred'][i]
         grasp_width = torch.clamp(grasp_width, min=0, max=GRASP_MAX_WIDTH)
@@ -118,6 +118,17 @@ def pred_decode(end_points):
         grasp_angle = grasp_angle[objectness_mask]
         grasp_center = grasp_center[objectness_mask]
         grasp_tolerance = grasp_tolerance[objectness_mask]
+
+
+        ## clip approaching that dangerous to execute for eye_in_pandaHand
+        approaching_mask = approaching[:,-1] >= torch.cos(torch.tensor(torch.pi/8))
+        grasp_score = grasp_score[approaching_mask]
+        grasp_width = grasp_width[approaching_mask]
+        grasp_depth = grasp_depth[approaching_mask]
+        approaching = approaching[approaching_mask]
+        grasp_angle = grasp_angle[approaching_mask]
+        grasp_center = grasp_center[approaching_mask]
+        grasp_tolerance = grasp_tolerance[approaching_mask]
         grasp_score = grasp_score * grasp_tolerance / GRASP_MAX_TOLERANCE
 
         ## convert to rotation matrix

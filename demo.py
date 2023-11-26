@@ -2,6 +2,8 @@
     Author: chenxi-wang
 """
 
+# Grasp 可用性存疑
+
 import os
 import sys
 import numpy as np
@@ -19,13 +21,13 @@ sys.path.append(os.path.join(ROOT_DIR, 'models'))
 sys.path.append(os.path.join(ROOT_DIR, 'dataset'))
 sys.path.append(os.path.join(ROOT_DIR, 'utils'))
 
-from graspnet import GraspNet, pred_decode
-from graspnet_dataset import GraspNetDataset
-from collision_detector import ModelFreeCollisionDetector
-from data_utils import CameraInfo, create_point_cloud_from_depth_image
+from models.graspnet import GraspNet, pred_decode
+from dataset.graspnet_dataset import GraspNetDataset
+from utils.collision_detector import ModelFreeCollisionDetector
+from utils.data_utils import CameraInfo, create_point_cloud_from_depth_image
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--checkpoint_path', required=True, help='Model checkpoint path')
+parser.add_argument('--checkpoint_path', default="graspnet-baseline/weight/checkpoint-kn.tar", help='Model checkpoint path')
 parser.add_argument('--num_point', type=int, default=20000, help='Point Number [default: 20000]')
 parser.add_argument('--num_view', type=int, default=300, help='View Number [default: 300]')
 parser.add_argument('--collision_thresh', type=float, default=0.01, help='Collision Threshold in collision detection [default: 0.01]')
@@ -84,8 +86,8 @@ def get_and_process_data(data_dir):
     cloud_sampled = torch.from_numpy(cloud_sampled[np.newaxis].astype(np.float32))
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     cloud_sampled = cloud_sampled.to(device)
-    end_points['point_clouds'] = cloud_sampled
-    end_points['cloud_colors'] = color_sampled
+    end_points['point_clouds'] = cloud_sampled # torch point cloud
+    end_points['cloud_colors'] = color_sampled # numpy 
 
     return end_points, cloud
 
@@ -95,7 +97,7 @@ def get_grasps(net, end_points):
         end_points = net(end_points)
         grasp_preds = pred_decode(end_points)
     gg_array = grasp_preds[0].detach().cpu().numpy()
-    gg = GraspGroup(gg_array)
+    gg = GraspGroup(gg_array) # list -> map setter
     return gg
 
 def collision_detection(gg, cloud):
@@ -107,18 +109,18 @@ def collision_detection(gg, cloud):
 def vis_grasps(gg, cloud):
     gg.nms()
     gg.sort_by_score()
-    gg = gg[:50]
+    gg = gg[:20]
     grippers = gg.to_open3d_geometry_list()
     o3d.visualization.draw_geometries([cloud, *grippers])
 
 def demo(data_dir):
     net = get_net()
     end_points, cloud = get_and_process_data(data_dir)
-    gg = get_grasps(net, end_points)
+    gg = get_grasps(net, end_points) # net work on end points
     if cfgs.collision_thresh > 0:
         gg = collision_detection(gg, np.array(cloud.points))
     vis_grasps(gg, cloud)
 
 if __name__=='__main__':
-    data_dir = 'doc/example_data'
+    data_dir = 'graspnet-baseline/doc/example_data'
     demo(data_dir)
